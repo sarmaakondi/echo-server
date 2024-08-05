@@ -2,6 +2,7 @@ import json
 
 from django.contrib.auth import authenticate
 from django.contrib.auth import login as auth_login
+from django.contrib.auth import logout as auth_logout
 from django.contrib.auth.hashers import make_password
 from django.contrib.auth.models import User
 from django.http import JsonResponse
@@ -40,3 +41,10 @@ def login_user(request):
         return JsonResponse({"username": user.username})
 
     return JsonResponse({"errors": "Invalid credentials"}, status=400)
+
+
+@csrf_exempt
+@require_POST
+def logout_user(request):
+    auth_logout(request)
+    return JsonResponse({"message": "Logged out"})
