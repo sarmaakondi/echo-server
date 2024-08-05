@@ -85,5 +85,10 @@ def login_user(request):
 @csrf_exempt
 @require_POST
 def logout_user(request):
+    # Check for logged in user
+    if not request.user.is_authenticated:
+        return JsonResponse({"errors": "No user is currently logged in"}, status=400)
+
+    # Logout the current user and send response
     auth_logout(request)
     return JsonResponse({"message": "Logged out"})
