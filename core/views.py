@@ -1,5 +1,7 @@
 import json
 
+from django.contrib.auth import authenticate
+from django.contrib.auth import login as auth_login
 from django.contrib.auth.hashers import make_password
 from django.contrib.auth.models import User
 from django.http import JsonResponse
@@ -23,3 +25,18 @@ def register_user(request):
     )
 
     return JsonResponse({"username": user.username})
+
+
+@csrf_exempt
+@require_POST
+def login_user(request):
+    data = json.loads(request.body)
+    username = data.get("username")
+    password = data.get("password")
+    user = authenticate(username=username, password=password)
+
+    if user is not None:
+        auth_login(request, user)
+        return JsonResponse({"username": user.username})
+
+    return JsonResponse({"errors": "Invalid credentials"}, status=400)
