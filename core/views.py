@@ -89,6 +89,27 @@ def login_user(request):
 
 
 @csrf_exempt
+def refresh_token(request):
+    # Ensure to receive valid JSON data
+    try:
+        data = json.loads(request.body)
+    except json.JSONDecodeError:
+        return JsonResponse({"errors": "Invalid JSON data"}, status=400)
+
+    # Check for refresh token
+    refresh_token = data.get("refresh")
+    if not refresh_token:
+        return JsonResponse({"errors": "Refresh token is required"}, status=400)
+
+    try:
+        refresh = RefreshToken(refresh_token)
+        new_access_token = refresh.access_token
+        return JsonResponse({"access": str(new_access_token)})
+    except Exception as e:
+        return JsonResponse({"errors": str(e)}, status=400)
+
+
+@csrf_exempt
 @require_POST
 def logout_user(request):
     # Check for logged in user
