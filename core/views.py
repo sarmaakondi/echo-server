@@ -1,4 +1,5 @@
 import json
+import re
 
 from django.contrib.auth import authenticate
 from django.contrib.auth import login as auth_login
@@ -13,14 +14,39 @@ from django.views.decorators.http import require_POST
 @csrf_exempt
 @require_POST
 def register_user(request):
-    data = json.loads(request.body)
+    # Ensure to receive valid JSON data
+    try:
+        data = json.loads(request.body)
+    except json.JSONDecodeError:
+        return JsonResponse({"errors": "Invalid JSON data"}, status=400)
+
+    # Read username, email and password from request body
     username = data.get("username")
     email = data.get("email")
     password = data.get("password")
 
+    # Check for required fields
+    if not username or not email or not password:
+        return JsonResponse(
+            {"errors": "username, email and password are required"}, status=400
+        )
+
+    # Validate email format
+    if not re.match(r"[^@]+@[^@]+\.[^@]+", email):
+        return JsonResponse({"errors": "Invalid email format"}, status=400)
+
+    # Check password strength
+    if len(password) < 6:
+        return JsonResponse({"errors": "Password must be at least 6 characters long"})
+
+    # Check for duplicate username or email
     if User.objects.filter(username=username).exists():
         return JsonResponse({"errors": "Username already exists"}, status=400)
 
+    if User.objects.filter(email=email).exists():
+        return JsonResponse({"errors": "Email already registered"}, status=400)
+
+    # Create the user
     user = User.objects.create(
         username=username, email=email, password=make_password(password)
     )
