@@ -2,13 +2,13 @@ import json
 import re
 
 from django.contrib.auth import authenticate
-from django.contrib.auth import login as auth_login
 from django.contrib.auth import logout as auth_logout
 from django.contrib.auth.hashers import make_password
 from django.contrib.auth.models import User
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_POST
+from rest_framework_simplejwt.tokens import RefreshToken
 
 
 @csrf_exempt
@@ -55,7 +55,6 @@ def register_user(request):
 
 
 @csrf_exempt
-@require_POST
 def login_user(request):
     # Ensure to receive valid JSON data
     try:
@@ -73,17 +72,18 @@ def login_user(request):
             {"errors": "username and password are required"}, status=400
         )
 
-    # Check if the user is already logged in
-    if request.user.is_authenticated:
-        return JsonResponse({"errors": "User is already logged in"}, status=400)
-
     # Authenticate user
     user = authenticate(username=username, password=password)
 
-    # Login user
+    # Generate and send the access token
     if user is not None:
-        auth_login(request, user)
-        return JsonResponse({"username": user.username})
+        refresh = RefreshToken.for_user(user)
+        return JsonResponse(
+            {
+                "refresh": str(refresh),
+                "access": str(refresh.access_token),
+            }
+        )
 
     return JsonResponse({"errors": "Invalid credentials"}, status=400)
 
