@@ -73,8 +73,14 @@ def login_user(request):
             {"errors": "username and password are required"}, status=400
         )
 
+    # Check if the user is already logged in
+    if request.user.is_authenticated:
+        return JsonResponse({"errors": "User is already logged in"}, status=400)
+
     # Authenticate user
     user = authenticate(username=username, password=password)
+
+    # Login user
     if user is not None:
         auth_login(request, user)
         return JsonResponse({"username": user.username})
