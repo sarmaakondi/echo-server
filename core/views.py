@@ -57,11 +57,24 @@ def register_user(request):
 @csrf_exempt
 @require_POST
 def login_user(request):
-    data = json.loads(request.body)
+    # Ensure to receive valid JSON data
+    try:
+        data = json.loads(request.body)
+    except json.JSONDecodeError:
+        return JsonResponse({"errors": "Invalid JSON data"}, status=400)
+
+    # Read username and password from request body
     username = data.get("username")
     password = data.get("password")
-    user = authenticate(username=username, password=password)
 
+    # Check for empty fields
+    if not username or not password:
+        return JsonResponse(
+            {"errors": "username and password are required"}, status=400
+        )
+
+    # Authenticate user
+    user = authenticate(username=username, password=password)
     if user is not None:
         auth_login(request, user)
         return JsonResponse({"username": user.username})
