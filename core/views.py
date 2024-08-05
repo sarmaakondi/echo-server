@@ -2,7 +2,6 @@ import json
 import re
 
 from django.contrib.auth import authenticate
-from django.contrib.auth import logout as auth_logout
 from django.contrib.auth.hashers import make_password
 from django.contrib.auth.models import User
 from django.http import JsonResponse
@@ -107,15 +106,3 @@ def refresh_token(request):
         return JsonResponse({"access": str(new_access_token)})
     except Exception as e:
         return JsonResponse({"errors": str(e)}, status=400)
-
-
-@csrf_exempt
-@require_POST
-def logout_user(request):
-    # Check for logged in user
-    if not request.user.is_authenticated:
-        return JsonResponse({"errors": "No user is currently logged in"}, status=400)
-
-    # Logout the current user and send response
-    auth_logout(request)
-    return JsonResponse({"message": "Logged out"})
