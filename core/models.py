@@ -10,3 +10,13 @@ class Echo(models.Model):
 
     def __str__(self):
         return f"Echo by {self.user.username}"
+
+
+class Comment(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    echo = models.ForeignKey(Echo, on_delete=models.CASCADE, related_name="comments")
+    content = models.TextField()
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"Comment by {self.user.username} on Echo {self.echo.id}"
