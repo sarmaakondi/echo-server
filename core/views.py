@@ -92,8 +92,8 @@ class LoginUser(View):
                     "access": str(access_token),
                 }
             )
-        else:
-            return JsonResponse({"errors": "Invalid credentials"}, status=400)
+
+        return JsonResponse({"errors": "Invalid credentials"}, status=400)
 
 
 @csrf_exempt
