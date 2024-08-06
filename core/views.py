@@ -2,6 +2,7 @@ import json
 import re
 
 from django.contrib.auth import authenticate
+from django.contrib.auth.decorators import login_required
 from django.contrib.auth.hashers import make_password
 from django.contrib.auth.models import User
 from django.http import JsonResponse
@@ -12,6 +13,7 @@ from django.views.decorators.http import require_POST
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework_simplejwt.views import TokenObtainPairView
 
+from .models import Echo
 from .serializers import CustomTokenObtainPairSerializer
 
 
@@ -115,3 +117,31 @@ def refresh_token(request):
         return JsonResponse({"access": str(new_access_token)})
     except Exception as e:
         return JsonResponse({"errors": str(e)}, status=400)
+
+
+@csrf_exempt
+@login_required
+@require_POST
+def create_echo(request):
+    # Ensure to receive valid JSON data
+    try:
+        data = json.loads(request.body)
+    except json.JSONDecodeError:
+        return JsonResponse({"errors": "Invalid JSON data"}, status=400)
+
+    # Read the content from the request body
+    content = data.get("content")
+
+    # Check content
+    if not content:
+        return JsonResponse({"errors": "Content cannot be empty"}, status=400)
+
+    # Create Echo
+    echo = Echo.objects.create(
+        user=request.user,
+        content=content,
+    )
+
+    return JsonResponse(
+        {"message": "Echo created successfully", "echo_id": echo.id}, status=201
+    )
