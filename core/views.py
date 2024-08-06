@@ -5,6 +5,7 @@ from django.contrib.auth import authenticate
 from django.contrib.auth.hashers import make_password
 from django.contrib.auth.models import User
 from django.http import JsonResponse
+from django.shortcuts import get_object_or_404
 from django.utils.decorators import method_decorator
 from django.views import View
 from django.views.decorators.csrf import csrf_exempt
@@ -19,7 +20,7 @@ from rest_framework_simplejwt.authentication import JWTAuthentication
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework_simplejwt.views import TokenObtainPairView
 
-from .models import Echo
+from .models import Comment, Echo
 from .serializers import CustomTokenObtainPairSerializer
 
 
@@ -104,7 +105,6 @@ class LoginUser(View):
         return JsonResponse({"errors": "Invalid credentials"}, status=400)
 
 
-@csrf_exempt
 def refresh_token(request):
     # Ensure to receive valid JSON data
     try:
@@ -151,4 +151,37 @@ def create_echo(request):
 
     return JsonResponse(
         {"message": "Echo created successfully", "echo_id": echo.id}, status=201
+    )
+
+
+@csrf_exempt
+@api_view(["POST"])
+@authentication_classes([JWTAuthentication])
+@permission_classes([IsAuthenticated])
+def create_comment(request):
+    # Ensure to receive valid JSON data
+    try:
+        data = json.loads(request.body)
+    except json.JSONDecodeError:
+        return JsonResponse({"errors": "Invalid JSON data"}, status=400)
+
+    # Read the content from the request body
+    echo_id = data.get("echo_id")
+    content = data.get("content")
+
+    # Check for empty fields
+    if not echo_id or not content:
+        return JsonResponse({"errors": "Echo ID and content are required"}, status=400)
+
+    # Create Comment
+    echo = get_object_or_404(Echo, id=echo_id)
+    comment = Comment.objects.create(
+        user=request.user,
+        echo=echo,
+        content=content,
+    )
+
+    return JsonResponse(
+        {"message": "Comment created successfully", "comment_id": comment.id},
+        status=201,
     )
