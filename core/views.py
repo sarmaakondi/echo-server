@@ -203,3 +203,27 @@ def like_echo(request, echo_id):
     else:
         echo.likes.add(user)
         return JsonResponse({"message": "Echo liked"}, status=200)
+
+
+def list_echoes(request):
+    echoes = Echo.objects.all().order_by("-created_at")
+    echo_list = []
+    for echo in echoes:
+        echo_list.append(
+            {
+                "id": echo.id,
+                "user": echo.user.username,
+                "content": echo.content,
+                "created_at": echo.created_at,
+                "likes": echo.likes.count(),
+                "comments": [
+                    {
+                        "user": comment.user.username,
+                        "content": comment.content,
+                        "created_at": comment.created_at,
+                    }
+                    for comment in echo.comments.all()
+                ],
+            }
+        )
+    return JsonResponse(echo_list, safe=False)
