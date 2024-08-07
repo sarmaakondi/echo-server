@@ -150,7 +150,15 @@ def create_echo(request):
     )
 
     return JsonResponse(
-        {"message": "Echo created successfully", "echo_id": echo.id}, status=201
+        {
+            "id": echo.id,
+            "user": echo.user.username,
+            "content": echo.content,
+            "created_at": echo.created_at,
+            "likes": 0,
+            "comments": [],
+        },
+        status=201,
     )
 
 
