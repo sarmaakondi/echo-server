@@ -207,10 +207,16 @@ def like_echo(request, echo_id):
     # Like/UnLike the echo
     if user in echo.likes.all():
         echo.likes.remove(user)
-        return JsonResponse({"message": "Echo unliked"}, status=200)
+        echo.save()
+        return JsonResponse(
+            {"message": "Echo unliked", "likes": echo.likes.count()}, status=200
+        )
     else:
         echo.likes.add(user)
-        return JsonResponse({"message": "Echo liked"}, status=200)
+        echo.save()
+        return JsonResponse(
+            {"message": "Echo liked", "likes": echo.likes.count()}, status=200
+        )
 
 
 def list_echoes(request):
