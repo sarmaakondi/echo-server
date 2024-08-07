@@ -221,6 +221,7 @@ def list_echoes(request):
                 "likes": echo.likes.count(),
                 "comments": [
                     {
+                        "id": comment.id,
                         "user": comment.user.username,
                         "content": comment.content,
                         "created_at": comment.created_at,
