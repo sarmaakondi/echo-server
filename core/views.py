@@ -207,16 +207,27 @@ def like_echo(request, echo_id):
     # Like/UnLike the echo
     if user in echo.likes.all():
         echo.likes.remove(user)
-        echo.save()
-        return JsonResponse(
-            {"message": "Echo unliked", "likes": echo.likes.count()}, status=200
-        )
     else:
         echo.likes.add(user)
-        echo.save()
-        return JsonResponse(
-            {"message": "Echo liked", "likes": echo.likes.count()}, status=200
-        )
+
+    response_data = {
+        "id": echo.id,
+        "user": echo.user.username,
+        "content": echo.content,
+        "created_at": echo.created_at,
+        "likes": echo.likes.count(),
+        "comments": [
+            {
+                "id": comment.id,
+                "user": comment.user.username,
+                "content": comment.content,
+                "created_at": comment.created_at,
+            }
+            for comment in echo.comments.all()
+        ],
+    }
+
+    return JsonResponse(response_data, status=200)
 
 
 def list_echoes(request):
@@ -244,4 +255,5 @@ def list_echoes(request):
                 ],
             }
         )
+
     return JsonResponse(echo_list, safe=False)
