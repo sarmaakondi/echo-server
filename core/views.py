@@ -183,16 +183,31 @@ def create_comment(request):
 
     # Create Comment
     echo = get_object_or_404(Echo, id=echo_id)
-    comment = Comment.objects.create(
+    Comment.objects.create(
         user=request.user,
         echo=echo,
         content=content,
     )
 
-    return JsonResponse(
-        {"message": "Comment created successfully", "comment_id": comment.id},
-        status=201,
-    )
+    response_data = {
+        "id": echo.id,
+        "user": echo.user.username,
+        "content": echo.content,
+        "created_at": echo.created_at,
+        "likes": echo.likes.count(),
+        "is_liked": request.user in echo.likes.all(),
+        "comments": [
+            {
+                "id": comment.id,
+                "user": comment.user.username,
+                "content": comment.content,
+                "created_at": comment.created_at,
+            }
+            for comment in echo.comments.all()
+        ],
+    }
+
+    return JsonResponse(response_data, status=201)
 
 
 @csrf_exempt
