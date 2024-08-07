@@ -10,4 +10,5 @@ urlpatterns = [
     path("create-comment/", views.create_comment, name="create_comment"),
     path("like-echo/<int:echo_id>/", views.like_echo, name="like_echo"),
     path("list-echoes/", views.list_echoes, name="list_echoes"),
+    path("list-echoes-no-auth/", views.list_echoes_no_auth, name="list_echoes_no_auth"),
 ]

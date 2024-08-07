@@ -232,7 +232,43 @@ def like_echo(request, echo_id):
     return JsonResponse(response_data, status=200)
 
 
+@api_view(["GET"])
+@authentication_classes([JWTAuthentication])
+@permission_classes([IsAuthenticated])
 def list_echoes(request):
+    # Get all the latest echoes
+    echoes = Echo.objects.all().order_by("-created_at")[:20]
+
+    # Append required details into a list and return
+    user = request.user
+    echo_list = []
+    for echo in echoes:
+        is_liked = user in echo.likes.all()
+        echo_list.append(
+            {
+                # "user_1": request.user,
+                "id": echo.id,
+                "user": echo.user.username,
+                "content": echo.content,
+                "created_at": echo.created_at,
+                "likes": echo.likes.count(),
+                "is_liked": is_liked,
+                "comments": [
+                    {
+                        "id": comment.id,
+                        "user": comment.user.username,
+                        "content": comment.content,
+                        "created_at": comment.created_at,
+                    }
+                    for comment in echo.comments.all()
+                ],
+            }
+        )
+
+    return JsonResponse(echo_list, safe=False)
+
+
+def list_echoes_no_auth(request):
     # Get all the latest echoes
     echoes = Echo.objects.all().order_by("-created_at")[:20]
 
@@ -241,6 +277,7 @@ def list_echoes(request):
     for echo in echoes:
         echo_list.append(
             {
+                # "user_1": request.user,
                 "id": echo.id,
                 "user": echo.user.username,
                 "content": echo.content,
