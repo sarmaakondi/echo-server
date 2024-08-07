@@ -205,7 +205,8 @@ def like_echo(request, echo_id):
     user = request.user
 
     # Like/UnLike the echo
-    if user in echo.likes.all():
+    is_liked = user in echo.likes.all()
+    if is_liked:
         echo.likes.remove(user)
     else:
         echo.likes.add(user)
@@ -216,6 +217,7 @@ def like_echo(request, echo_id):
         "content": echo.content,
         "created_at": echo.created_at,
         "likes": echo.likes.count(),
+        "is_liked": not is_liked,
         "comments": [
             {
                 "id": comment.id,
