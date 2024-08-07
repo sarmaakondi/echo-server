@@ -185,3 +185,21 @@ def create_comment(request):
         {"message": "Comment created successfully", "comment_id": comment.id},
         status=201,
     )
+
+
+@csrf_exempt
+@api_view(["POST"])
+@authentication_classes([JWTAuthentication])
+@permission_classes([IsAuthenticated])
+def like_echo(request, echo_id):
+    # Get echo and user details
+    echo = get_object_or_404(Echo, id=echo_id)
+    user = request.user
+
+    # Like/UnLike the echo
+    if user in echo.likes.all():
+        echo.likes.remove(user)
+        return JsonResponse({"message": "Echo unliked"}, status=200)
+    else:
+        echo.likes.add(user)
+        return JsonResponse({"message": "Echo liked"}, status=200)
