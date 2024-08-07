@@ -206,7 +206,10 @@ def like_echo(request, echo_id):
 
 
 def list_echoes(request):
+    # Get all the latest echoes
     echoes = Echo.objects.all().order_by("-created_at")
+
+    # Append required details into a list and return
     echo_list = []
     for echo in echoes:
         echo_list.append(
