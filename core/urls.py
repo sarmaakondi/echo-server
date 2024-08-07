@@ -8,4 +8,5 @@ urlpatterns = [
     path("refresh/", views.refresh_token),
     path("create-echo/", views.create_echo, name="create_echo"),
     path("create-comment/", views.create_comment, name="create_comment"),
+    path("like-echo/<int:echo_id>", views.like_echo, name="like_echo"),
 ]
