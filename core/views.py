@@ -203,7 +203,7 @@ def create_comment(request):
                 "content": comment.content,
                 "created_at": comment.created_at,
             }
-            for comment in echo.comments.all().order_by("-created_at")
+            for comment in echo.comments.all().order_by("-created_at")[:20]
         ],
     }
 
@@ -240,7 +240,7 @@ def like_echo(request, echo_id):
                 "content": comment.content,
                 "created_at": comment.created_at,
             }
-            for comment in echo.comments.all().order_by("-created_at")
+            for comment in echo.comments.all().order_by("-created_at")[:20]
         ],
     }
 
@@ -261,7 +261,6 @@ def list_echoes(request):
         is_liked = user in echo.likes.all()
         echo_list.append(
             {
-                # "user_1": request.user,
                 "id": echo.id,
                 "user": echo.user.username,
                 "content": echo.content,
@@ -275,7 +274,43 @@ def list_echoes(request):
                         "content": comment.content,
                         "created_at": comment.created_at,
                     }
-                    for comment in echo.comments.all().order_by("-created_at")
+                    for comment in echo.comments.all().order_by("-created_at")[:20]
+                ],
+            }
+        )
+
+    return JsonResponse(echo_list, safe=False)
+
+
+@api_view(["GET"])
+@authentication_classes([JWTAuthentication])
+@permission_classes([IsAuthenticated])
+def list_liked_echoes(request):
+    # Get all the echoes liked by the current user
+    user = request.user
+    liked_echoes = Echo.objects.filter(likes=user).order_by("-created_at")[:20]
+
+    # Append required details into a list and return
+
+    echo_list = []
+    for echo in liked_echoes:
+        is_liked = user in echo.likes.all()
+        echo_list.append(
+            {
+                "id": echo.id,
+                "user": echo.user.username,
+                "content": echo.content,
+                "created_at": echo.created_at,
+                "likes": echo.likes.count(),
+                "is_liked": is_liked,
+                "comments": [
+                    {
+                        "id": comment.id,
+                        "user": comment.user.username,
+                        "content": comment.content,
+                        "created_at": comment.created_at,
+                    }
+                    for comment in echo.comments.all().order_by("-created_at")[:20]
                 ],
             }
         )
@@ -305,7 +340,7 @@ def list_echoes_no_auth(request):
                         "content": comment.content,
                         "created_at": comment.created_at,
                     }
-                    for comment in echo.comments.all().order_by("-created_at")
+                    for comment in echo.comments.all().order_by("-created_at")[:20]
                 ],
             }
         )
