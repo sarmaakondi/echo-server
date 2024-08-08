@@ -203,7 +203,7 @@ def create_comment(request):
                 "content": comment.content,
                 "created_at": comment.created_at,
             }
-            for comment in echo.comments.all()
+            for comment in echo.comments.all().order_by("-created_at")
         ],
     }
 
@@ -240,7 +240,7 @@ def like_echo(request, echo_id):
                 "content": comment.content,
                 "created_at": comment.created_at,
             }
-            for comment in echo.comments.all()
+            for comment in echo.comments.all().order_by("-created_at")
         ],
     }
 
@@ -275,7 +275,7 @@ def list_echoes(request):
                         "content": comment.content,
                         "created_at": comment.created_at,
                     }
-                    for comment in echo.comments.all()
+                    for comment in echo.comments.all().order_by("-created_at")
                 ],
             }
         )
@@ -305,7 +305,7 @@ def list_echoes_no_auth(request):
                         "content": comment.content,
                         "created_at": comment.created_at,
                     }
-                    for comment in echo.comments.all()
+                    for comment in echo.comments.all().order_by("-created_at")
                 ],
             }
         )
