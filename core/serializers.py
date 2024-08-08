@@ -19,6 +19,6 @@ class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
             # Build absolute URL for the profile picture
             profile_picture_url = settings.DOMAIN_URL + profile_picture_url
 
-        token["profile_picture_url"] = profile_picture_url
+        token["user_profile_picture"] = profile_picture_url
 
         return token
