@@ -291,7 +291,6 @@ def list_liked_echoes(request):
     liked_echoes = Echo.objects.filter(likes=user).order_by("-created_at")[:20]
 
     # Append required details into a list and return
-
     echo_list = []
     for echo in liked_echoes:
         is_liked = user in echo.likes.all()
