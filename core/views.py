@@ -445,7 +445,7 @@ def upload_profile_pic(request):
         return JsonResponse(
             {
                 "message": "Profile picture uploaded successfully",
-                "profile_picture_url": profile_picture_url,
+                "user_profile_picture": profile_picture_url,
             },
             status=201,
         )
