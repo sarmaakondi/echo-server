@@ -12,4 +12,5 @@ urlpatterns = [
     path("list-echoes/", views.list_echoes, name="list_echoes"),
     path("list-liked-echoes/", views.list_liked_echoes, name="list_liked_echoes"),
     path("list-echoes-no-auth/", views.list_echoes_no_auth, name="list_echoes_no_auth"),
+    path("upload-profile-pic/", views.upload_profile_pic, name="upload_profile_pic"),
 ]

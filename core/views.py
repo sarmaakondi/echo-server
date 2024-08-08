@@ -13,8 +13,10 @@ from django.views.decorators.http import require_POST
 from rest_framework.decorators import (
     api_view,
     authentication_classes,
+    parser_classes,
     permission_classes,
 )
+from rest_framework.parsers import FormParser, MultiPartParser
 from rest_framework.permissions import IsAuthenticated
 from rest_framework_simplejwt.authentication import JWTAuthentication
 from rest_framework_simplejwt.tokens import RefreshToken
@@ -149,10 +151,17 @@ def create_echo(request):
         content=content,
     )
 
+    user_profile_picture_url = (
+        request.build_absolute_uri(echo.user.profile.profile_picture.url)
+        if hasattr(echo.user, "profile") and echo.user.profile.profile_picture
+        else None
+    )
+
     return JsonResponse(
         {
             "id": echo.id,
             "user": echo.user.username,
+            "user_profile_picture": user_profile_picture_url,
             "content": echo.content,
             "created_at": echo.created_at,
             "likes": 0,
@@ -189,9 +198,16 @@ def create_comment(request):
         content=content,
     )
 
+    user_profile_picture_url = (
+        request.build_absolute_uri(echo.user.profile.profile_picture.url)
+        if hasattr(echo.user, "profile") and echo.user.profile.profile_picture
+        else None
+    )
+
     response_data = {
         "id": echo.id,
         "user": echo.user.username,
+        "user_profile_picture": user_profile_picture_url,
         "content": echo.content,
         "created_at": echo.created_at,
         "likes": echo.likes.count(),
@@ -200,6 +216,12 @@ def create_comment(request):
             {
                 "id": comment.id,
                 "user": comment.user.username,
+                "user_profile_picture": (
+                    request.build_absolute_uri(comment.user.profile.profile_picture.url)
+                    if hasattr(comment.user, "profile")
+                    and comment.user.profile.profile_picture
+                    else None
+                ),
                 "content": comment.content,
                 "created_at": comment.created_at,
             }
@@ -226,9 +248,16 @@ def like_echo(request, echo_id):
     else:
         echo.likes.add(user)
 
+    user_profile_picture_url = (
+        request.build_absolute_uri(echo.user.profile.profile_picture.url)
+        if hasattr(echo.user, "profile") and echo.user.profile.profile_picture
+        else None
+    )
+
     response_data = {
         "id": echo.id,
         "user": echo.user.username,
+        "user_profile_picture": user_profile_picture_url,
         "content": echo.content,
         "created_at": echo.created_at,
         "likes": echo.likes.count(),
@@ -237,6 +266,12 @@ def like_echo(request, echo_id):
             {
                 "id": comment.id,
                 "user": comment.user.username,
+                "user_profile_picture": (
+                    request.build_absolute_uri(comment.user.profile.profile_picture.url)
+                    if hasattr(comment.user, "profile")
+                    and comment.user.profile.profile_picture
+                    else None
+                ),
                 "content": comment.content,
                 "created_at": comment.created_at,
             }
@@ -259,10 +294,16 @@ def list_echoes(request):
     echo_list = []
     for echo in echoes:
         is_liked = user in echo.likes.all()
+        user_profile_picture_url = (
+            request.build_absolute_uri(echo.user.profile.profile_picture.url)
+            if hasattr(echo.user, "profile") and echo.user.profile.profile_picture
+            else None
+        )
         echo_list.append(
             {
                 "id": echo.id,
                 "user": echo.user.username,
+                "user_profile_picture": user_profile_picture_url,
                 "content": echo.content,
                 "created_at": echo.created_at,
                 "likes": echo.likes.count(),
@@ -271,6 +312,14 @@ def list_echoes(request):
                     {
                         "id": comment.id,
                         "user": comment.user.username,
+                        "user_profile_picture": (
+                            request.build_absolute_uri(
+                                comment.user.profile.profile_picture.url
+                            )
+                            if hasattr(comment.user, "profile")
+                            and comment.user.profile.profile_picture
+                            else None
+                        ),
                         "content": comment.content,
                         "created_at": comment.created_at,
                     }
@@ -294,10 +343,16 @@ def list_liked_echoes(request):
     echo_list = []
     for echo in liked_echoes:
         is_liked = user in echo.likes.all()
+        user_profile_picture_url = (
+            request.build_absolute_uri(echo.user.profile.profile_picture.url)
+            if hasattr(echo.user, "profile") and echo.user.profile.profile_picture
+            else None
+        )
         echo_list.append(
             {
                 "id": echo.id,
                 "user": echo.user.username,
+                "user_profile_picture": user_profile_picture_url,
                 "content": echo.content,
                 "created_at": echo.created_at,
                 "likes": echo.likes.count(),
@@ -306,6 +361,14 @@ def list_liked_echoes(request):
                     {
                         "id": comment.id,
                         "user": comment.user.username,
+                        "user_profile_picture": (
+                            request.build_absolute_uri(
+                                comment.user.profile.profile_picture.url
+                            )
+                            if hasattr(comment.user, "profile")
+                            and comment.user.profile.profile_picture
+                            else None
+                        ),
                         "content": comment.content,
                         "created_at": comment.created_at,
                     }
@@ -318,17 +381,21 @@ def list_liked_echoes(request):
 
 
 def list_echoes_no_auth(request):
-    # Get all the latest echoes
     echoes = Echo.objects.all().order_by("-created_at")[:20]
 
-    # Append required details into a list and return
     echo_list = []
     for echo in echoes:
+        user_profile_picture_url = (
+            request.build_absolute_uri(echo.user.profile.profile_picture.url)
+            if hasattr(echo.user, "profile") and echo.user.profile.profile_picture
+            else None
+        )
+
         echo_list.append(
             {
-                # "user_1": request.user,
                 "id": echo.id,
                 "user": echo.user.username,
+                "user_profile_picture": user_profile_picture_url,
                 "content": echo.content,
                 "created_at": echo.created_at,
                 "likes": echo.likes.count(),
@@ -336,6 +403,14 @@ def list_echoes_no_auth(request):
                     {
                         "id": comment.id,
                         "user": comment.user.username,
+                        "user_profile_picture": (
+                            request.build_absolute_uri(
+                                comment.user.profile.profile_picture.url
+                            )
+                            if hasattr(comment.user, "profile")
+                            and comment.user.profile.profile_picture
+                            else None
+                        ),
                         "content": comment.content,
                         "created_at": comment.created_at,
                     }
@@ -345,3 +420,33 @@ def list_echoes_no_auth(request):
         )
 
     return JsonResponse(echo_list, safe=False)
+
+
+@api_view(["POST"])
+@parser_classes([MultiPartParser, FormParser])
+@authentication_classes([JWTAuthentication])
+@permission_classes([IsAuthenticated])
+def upload_profile_pic(request):
+    user = request.user
+    profile_pic = request.FILES.get("profile_picture")
+
+    if profile_pic:
+        # Delete the old profile picture if it exists
+        if user.profile.profile_picture:
+            user.profile.profile_picture.delete(save=False)
+        # Save the new profile picture
+        user.profile.profile_picture.save(profile_pic.name, profile_pic)
+        user.save()
+
+        profile_picture_url = request.build_absolute_uri(
+            user.profile.profile_picture.url
+        )
+
+        return JsonResponse(
+            {
+                "message": "Profile picture uploaded successfully",
+                "profile_picture_url": profile_picture_url,
+            },
+            status=201,
+        )
+    return JsonResponse({"message": "No file uploaded"}, status=400)
