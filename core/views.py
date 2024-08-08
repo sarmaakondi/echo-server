@@ -127,6 +127,44 @@ def refresh_token(request):
         return JsonResponse({"errors": str(e)}, status=400)
 
 
+# Helper function to build the response
+def build_echo_response(echo, request):
+    user_profile_picture_url = (
+        request.build_absolute_uri(echo.user.profile.profile_picture.url)
+        if hasattr(echo.user, "profile") and echo.user.profile.profile_picture
+        else None
+    )
+
+    echo_data = {
+        "id": echo.id,
+        "user": echo.user.username,
+        "user_profile_picture": user_profile_picture_url,
+        "content": echo.content,
+        "created_at": echo.created_at,
+        "likes": echo.likes.count(),
+        "is_liked": request.user in echo.likes.all()
+        if request.user.is_authenticated
+        else False,
+        "comments": [
+            {
+                "id": comment.id,
+                "user": comment.user.username,
+                "user_profile_picture": (
+                    request.build_absolute_uri(comment.user.profile.profile_picture.url)
+                    if hasattr(comment.user, "profile")
+                    and comment.user.profile.profile_picture
+                    else None
+                ),
+                "content": comment.content,
+                "created_at": comment.created_at,
+            }
+            for comment in echo.comments.all().order_by("-created_at")[:20]
+        ],
+    }
+
+    return echo_data
+
+
 @csrf_exempt
 @api_view(["POST"])
 @authentication_classes([JWTAuthentication])
@@ -198,37 +236,7 @@ def create_comment(request):
         content=content,
     )
 
-    user_profile_picture_url = (
-        request.build_absolute_uri(echo.user.profile.profile_picture.url)
-        if hasattr(echo.user, "profile") and echo.user.profile.profile_picture
-        else None
-    )
-
-    response_data = {
-        "id": echo.id,
-        "user": echo.user.username,
-        "user_profile_picture": user_profile_picture_url,
-        "content": echo.content,
-        "created_at": echo.created_at,
-        "likes": echo.likes.count(),
-        "is_liked": request.user in echo.likes.all(),
-        "comments": [
-            {
-                "id": comment.id,
-                "user": comment.user.username,
-                "user_profile_picture": (
-                    request.build_absolute_uri(comment.user.profile.profile_picture.url)
-                    if hasattr(comment.user, "profile")
-                    and comment.user.profile.profile_picture
-                    else None
-                ),
-                "content": comment.content,
-                "created_at": comment.created_at,
-            }
-            for comment in echo.comments.all().order_by("-created_at")[:20]
-        ],
-    }
-
+    response_data = build_echo_response(echo, request)
     return JsonResponse(response_data, status=201)
 
 
@@ -248,37 +256,7 @@ def like_echo(request, echo_id):
     else:
         echo.likes.add(user)
 
-    user_profile_picture_url = (
-        request.build_absolute_uri(echo.user.profile.profile_picture.url)
-        if hasattr(echo.user, "profile") and echo.user.profile.profile_picture
-        else None
-    )
-
-    response_data = {
-        "id": echo.id,
-        "user": echo.user.username,
-        "user_profile_picture": user_profile_picture_url,
-        "content": echo.content,
-        "created_at": echo.created_at,
-        "likes": echo.likes.count(),
-        "is_liked": not is_liked,
-        "comments": [
-            {
-                "id": comment.id,
-                "user": comment.user.username,
-                "user_profile_picture": (
-                    request.build_absolute_uri(comment.user.profile.profile_picture.url)
-                    if hasattr(comment.user, "profile")
-                    and comment.user.profile.profile_picture
-                    else None
-                ),
-                "content": comment.content,
-                "created_at": comment.created_at,
-            }
-            for comment in echo.comments.all().order_by("-created_at")[:20]
-        ],
-    }
-
+    response_data = build_echo_response(echo, request)
     return JsonResponse(response_data, status=200)
 
 
@@ -288,46 +266,7 @@ def like_echo(request, echo_id):
 def list_echoes(request):
     # Get all the latest echoes
     echoes = Echo.objects.all().order_by("-created_at")[:20]
-
-    # Append required details into a list and return
-    user = request.user
-    echo_list = []
-    for echo in echoes:
-        is_liked = user in echo.likes.all()
-        user_profile_picture_url = (
-            request.build_absolute_uri(echo.user.profile.profile_picture.url)
-            if hasattr(echo.user, "profile") and echo.user.profile.profile_picture
-            else None
-        )
-        echo_list.append(
-            {
-                "id": echo.id,
-                "user": echo.user.username,
-                "user_profile_picture": user_profile_picture_url,
-                "content": echo.content,
-                "created_at": echo.created_at,
-                "likes": echo.likes.count(),
-                "is_liked": is_liked,
-                "comments": [
-                    {
-                        "id": comment.id,
-                        "user": comment.user.username,
-                        "user_profile_picture": (
-                            request.build_absolute_uri(
-                                comment.user.profile.profile_picture.url
-                            )
-                            if hasattr(comment.user, "profile")
-                            and comment.user.profile.profile_picture
-                            else None
-                        ),
-                        "content": comment.content,
-                        "created_at": comment.created_at,
-                    }
-                    for comment in echo.comments.all().order_by("-created_at")[:20]
-                ],
-            }
-        )
-
+    echo_list = [build_echo_response(echo, request) for echo in echoes]
     return JsonResponse(echo_list, safe=False)
 
 
@@ -338,87 +277,13 @@ def list_liked_echoes(request):
     # Get all the echoes liked by the current user
     user = request.user
     liked_echoes = Echo.objects.filter(likes=user).order_by("-created_at")[:20]
-
-    # Append required details into a list and return
-    echo_list = []
-    for echo in liked_echoes:
-        is_liked = user in echo.likes.all()
-        user_profile_picture_url = (
-            request.build_absolute_uri(echo.user.profile.profile_picture.url)
-            if hasattr(echo.user, "profile") and echo.user.profile.profile_picture
-            else None
-        )
-        echo_list.append(
-            {
-                "id": echo.id,
-                "user": echo.user.username,
-                "user_profile_picture": user_profile_picture_url,
-                "content": echo.content,
-                "created_at": echo.created_at,
-                "likes": echo.likes.count(),
-                "is_liked": is_liked,
-                "comments": [
-                    {
-                        "id": comment.id,
-                        "user": comment.user.username,
-                        "user_profile_picture": (
-                            request.build_absolute_uri(
-                                comment.user.profile.profile_picture.url
-                            )
-                            if hasattr(comment.user, "profile")
-                            and comment.user.profile.profile_picture
-                            else None
-                        ),
-                        "content": comment.content,
-                        "created_at": comment.created_at,
-                    }
-                    for comment in echo.comments.all().order_by("-created_at")[:20]
-                ],
-            }
-        )
-
+    echo_list = [build_echo_response(echo, request) for echo in liked_echoes]
     return JsonResponse(echo_list, safe=False)
 
 
 def list_echoes_no_auth(request):
     echoes = Echo.objects.all().order_by("-created_at")[:20]
-
-    echo_list = []
-    for echo in echoes:
-        user_profile_picture_url = (
-            request.build_absolute_uri(echo.user.profile.profile_picture.url)
-            if hasattr(echo.user, "profile") and echo.user.profile.profile_picture
-            else None
-        )
-
-        echo_list.append(
-            {
-                "id": echo.id,
-                "user": echo.user.username,
-                "user_profile_picture": user_profile_picture_url,
-                "content": echo.content,
-                "created_at": echo.created_at,
-                "likes": echo.likes.count(),
-                "comments": [
-                    {
-                        "id": comment.id,
-                        "user": comment.user.username,
-                        "user_profile_picture": (
-                            request.build_absolute_uri(
-                                comment.user.profile.profile_picture.url
-                            )
-                            if hasattr(comment.user, "profile")
-                            and comment.user.profile.profile_picture
-                            else None
-                        ),
-                        "content": comment.content,
-                        "created_at": comment.created_at,
-                    }
-                    for comment in echo.comments.all().order_by("-created_at")[:20]
-                ],
-            }
-        )
-
+    echo_list = [build_echo_response(echo, request) for echo in echoes]
     return JsonResponse(echo_list, safe=False)
 
 
