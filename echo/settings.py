@@ -161,7 +161,8 @@ STATIC_URL = "static/"
 MEDIA_URL = "/media/"
 MEDIA_ROOT = os.path.join(BASE_DIR, "media")
 
-DOMAIN_URL = "http://127.0.0.1:8000"
+# DOMAIN_URL = "http://127.0.0.1:8000"
+DOMAIN_URL = "https://echo-server-14mu.onrender.com"
 
 
 # Default primary key field type
