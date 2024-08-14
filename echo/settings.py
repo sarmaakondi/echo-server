@@ -26,12 +26,12 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/5.0/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = "django-insecure-!a&b9xwdk+s^5#vy2pj+##a8vae3=hy)_9gvdo+6=jr^6n%ty)"
+SECRET_KEY = os.getenv("SECRET_KEY")
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = False
 
-ALLOWED_HOSTS = ["echo-server-14mu.onrender.com", "127.0.0.1", "localhost"]
+ALLOWED_HOSTS = os.getenv("ALLOWED_HOSTS").split(" ")
 
 CORS_ALLOW_ALL_ORIGINS = True
 
@@ -162,7 +162,7 @@ MEDIA_URL = "/media/"
 MEDIA_ROOT = os.path.join(BASE_DIR, "media")
 
 # DOMAIN_URL = "http://127.0.0.1:8000"
-DOMAIN_URL = "https://echo-server-14mu.onrender.com"
+DOMAIN_URL = os.getenv("DOMAIN_URL")
 
 
 # Default primary key field type
